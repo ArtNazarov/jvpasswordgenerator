@@ -22,13 +22,44 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        switchToMain();
+
+
+
+
+    }
+
+    public void switchToMain(){
+        setContentView(R.layout.activity_main);
+        eventHandlersForMain();
+    }
+
+    public void switchToSettings(){
+        setContentView(R.layout.settings_layout);
+        eventHandlersForSettings();
+    }
+
+    public void eventHandlersForMain(){
         setContentView(R.layout.activity_main);
         // Получаем указатель на кнопку по id
         Button button = (Button)findViewById(R.id.adder);
         // Назначаем обработчик
         button.setOnClickListener(this::onClick);
 
+        Button button2 = (Button)findViewById(R.id.btn_goto_settings);
+        button2.setOnClickListener(this::onClick2);
     }
+
+    public  void  eventHandlersForSettings(){
+        setContentView(R.layout.settings_layout);
+
+        Button button3 = (Button)findViewById(R.id.btn_return_main);
+        button3.setOnClickListener(this::onClick3);
+
+    }
+
+
     // Определяем функцию для генерации случайной строки
     public static String generateRandomString(int n, int m) {
         int length = new Random().nextInt(m - n + 1) + n;
@@ -59,6 +90,19 @@ public class MainActivity extends AppCompatActivity {
         p4.setText(generateRandomString(10, 12));
         p5.setText(generateRandomString(10, 12));
 
+
+    }
+
+    public void onClick2(View v) {
+
+        switchToSettings();
+
+    }
+
+    public void onClick3(View v) {
+
+
+        switchToMain();
 
     }
 
