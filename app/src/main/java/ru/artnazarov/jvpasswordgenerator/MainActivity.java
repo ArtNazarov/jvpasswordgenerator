@@ -12,8 +12,13 @@ import android.widget.CompoundButton;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Random;
@@ -33,7 +38,15 @@ public class MainActivity extends AppCompatActivity {
     protected boolean useNumbers = true;
     protected boolean useSpecialChars = true;
 
-    protected static HashMap<Character, List<String>> dict = load_list();
+    protected static int voc_count = -1; // число загруженных слов
+    // словарь
+    public static HashMap<Character, List<String>> remote_dict = null;
+    // загружено?
+    public static boolean is_loaded = false;
+    // сообщение о сетевой ошибке
+    public static String network_error = "";
+
+
 
 
     @Override
@@ -129,12 +142,6 @@ public class MainActivity extends AppCompatActivity {
         EditText p2 = (EditText) findViewById(R.id.password2);
         EditText p3 = (EditText) findViewById(R.id.password3);
 
-
-
-
-
-
-
         String pass1 = generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars);
         String pass2 = generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars);
         String pass3 = generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars);
@@ -150,13 +157,43 @@ public class MainActivity extends AppCompatActivity {
         EditText mnemonics2 = (EditText) findViewById(R.id.mnemonics2);
         EditText mnemonics3 = (EditText) findViewById(R.id.mnemonics3);
 
-        String mnemo1 = getMnemonicByPassword(pass1, MainActivity.dict);
-        String mnemo2 = getMnemonicByPassword(pass2, MainActivity.dict);
-        String mnemo3 = getMnemonicByPassword(pass3, MainActivity.dict);
 
-        mnemonics1.setText(mnemo1);
-        mnemonics2.setText(mnemo2);
-        mnemonics3.setText(mnemo3);
+        try {
+            HashMap<Character, List<String>> d = load_list();
+
+            if (!d.containsKey('a')){
+                mnemonics3.setText("cant find a");
+            } else {
+                mnemonics3.setText("load key a");
+            };
+
+            if (d.isEmpty()){
+                mnemonics2.setText("dict is empty");
+            } else {
+                mnemonics2.setText("dict not empty");
+            };
+
+                mnemonics3.setText(
+                        MainActivity.network_error.concat(
+                                "; voc_count".concat( String.valueOf( MainActivity.voc_count)))) ;
+
+        }
+            catch (Exception e){
+                mnemonics1.setText(e.toString());
+                mnemonics2.setText(e.getStackTrace().toString());
+            };
+
+        
+        if (MainActivity.is_loaded && !remote_dict.isEmpty() && remote_dict.containsKey('a')){
+            mnemonics1.setText(getMnemonicByPassword(pass1, remote_dict));
+            mnemonics2.setText(getMnemonicByPassword(pass2, remote_dict));
+            mnemonics3.setText(getMnemonicByPassword(pass3, remote_dict));
+
+        }
+
+
+
+
 
 
 
@@ -224,40 +261,73 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    // Загрузчик в словарь с сортировкой в списки, слов согласно первой букве
     public static HashMap<Character, List<String>> load_list(){
 
-        HashMap<Character, List<String>> d = new HashMap<>();
-
-        d.put('a',  Arrays.asList("ant", "ask", "ace"));
-        d.put('b',  Arrays.asList("bat", "box", "bag"));
-        d.put('c',  Arrays.asList("cat", "car", "cow"));
-        d.put('d',  Arrays.asList("dog", "day", "dip"));
-        d.put('e',  Arrays.asList("egg", " ear ", "elm"));
-        d.put('f',  Arrays.asList("fan", " fly ", "fox"));
-        d.put('g',  Arrays.asList("gum", " gas ", "gem"));
-        d.put('h',  Arrays.asList("hat", " hot ", "hop"));
-        d.put('i',  Arrays.asList("ice", " ink ", "ivy"));
-        d.put('j',  Arrays.asList("jam", " jet ", "joy"));
-        d.put('k',  Arrays.asList("key", " kid ", "kit"));
-        d.put('l',  Arrays.asList("log", " lap ", "lot"));
-        d.put('m',  Arrays.asList("man", " map ", "mud"));
-        d.put('n',  Arrays.asList("nut", " new ", "nap"));
-        d.put('o',  Arrays.asList("owl", " oak ", "orb"));
-        d.put('p',  Arrays.asList("pen", " pig ", "pan"));
-        d.put('q',  Arrays.asList("quip", " quay ", "quid"));
-        d.put('r',  Arrays.asList("rat", " red ", "rug"));
-        d.put('s',  Arrays.asList("sun", " sea ", "sky"));
-        d.put('t',  Arrays.asList("tea", " toe ", "top"));
-        d.put('u',  Arrays.asList("urn", " use ", "ups"));
-        d.put('v',  Arrays.asList("van", " vet ", "vie"));
-        d.put('w',  Arrays.asList("wig", " win ", "web"));
-        d.put('x',  Arrays.asList("xis", " xiv ", "xii"));
-        d.put('y',  Arrays.asList("yak", " yam ", "yew"));
-        d.put('z',  Arrays.asList("zoo", " zap ", "zip"));
- 
 
 
-        return d;
+
+        Thread thread = new Thread(new Runnable() {
+            public void run(){
+
+                HashMap<Character, List<String>> d = new HashMap<>();
+                try {
+                    URL url = new URL("https://raw.githubusercontent.com/ArtNazarov/etc/master/words.xml");
+                    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                    DocumentBuilder db = dbf.newDocumentBuilder();
+                    Document doc = db.parse(url.openStream());
+                    doc.getDocumentElement().normalize();
+
+                    NodeList nodeList = doc.getDocumentElement().getChildNodes();
+                    for (int i = 0; i < nodeList.getLength(); i++) {
+                        Node node = nodeList.item(i);
+                        if (node.getNodeType() == Node.ELEMENT_NODE) {
+                            String words = node.getTextContent();
+                            System.out.println(words);
+                            String[] wordArray = words.split(" ");
+                            for (String word : wordArray) {
+
+
+
+
+                                char firstLetter = word.charAt(0);
+                                if (!d.containsKey(firstLetter)) {
+                                    d.put(firstLetter, new ArrayList<String>());
+                                }
+                                if ((firstLetter >= 'a') && (firstLetter <= 'z')) {
+                                    d.get(firstLetter).add(word);
+                                };
+
+
+                            }
+                        }
+
+
+                    }; // end for
+                    MainActivity.is_loaded = true;
+                    MainActivity.remote_dict = d;
+                    MainActivity.network_error = "no errors";
+                }
+                catch (Exception e) {
+                    MainActivity.is_loaded = false;
+                    MainActivity.remote_dict = null;
+                    MainActivity.network_error = e.toString();
+                }
+
+            }
+        });
+
+        try {
+            thread.start();
+            thread.join(); // wait ended
+        }
+        catch (Exception e){
+            System.out.println(e.toString());
+        };
+
+
+
+        return MainActivity.remote_dict;
     };
 
 
@@ -274,19 +344,11 @@ public class MainActivity extends AppCompatActivity {
 
                 Character ch2 = ch;
 
-                char lower_ch = ch2.toString().toLowerCase().charAt(0);
+                ch = ch2.toString().toLowerCase().charAt(0);
 
-                String word = getRandomWord(dict, lower_ch);
+                result = result.concat( getRandomWord(dict, ch).toUpperCase() );
 
-                if (word != null)
-                        {
-                            result = result.concat( word.toUpperCase() ); }
-                        else
-                        {
-                            result = result.concat("!error!");
-                        };
-                }
-
+            }
 
             else
             {

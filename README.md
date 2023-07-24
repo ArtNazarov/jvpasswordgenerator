@@ -9,3 +9,5 @@ Main screen
 Settings
 
 ![image](https://drive.google.com/uc?export=view&id=17Y9JKpUkMTJvBz1nwDSi5hYtQsbOc5VO)
+
+As vocabulary for mnemonics using file https://github.com/ArtNazarov/etc/blob/master/words.xml
