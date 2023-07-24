@@ -9,15 +9,22 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.CompoundButton;
-import android.widget.TextView;
-import java.nio.charset.Charset;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Random;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.io.InputStream;
 
 
-import java.nio.charset.Charset;
-import java.util.Random;
-
-
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,15 +33,14 @@ public class MainActivity extends AppCompatActivity {
     protected boolean useNumbers = true;
     protected boolean useSpecialChars = true;
 
+    protected static HashMap<Character, List<String>> dict = load_list();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         switchToMain();
-
-
-
 
     }
 
@@ -103,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        String alphanumeric = "~";
+        String alphanumeric = "";
         if (needNumbers) { alphanumeric = alphanumeric.concat(numbers_chars); };
         if (needSmall) {alphanumeric = alphanumeric.concat(small_chars); };
         if (needBig) { alphanumeric = alphanumeric.concat(big_chars);};
@@ -122,15 +128,38 @@ public class MainActivity extends AppCompatActivity {
         EditText p1 = (EditText) findViewById(R.id.password1);
         EditText p2 = (EditText) findViewById(R.id.password2);
         EditText p3 = (EditText) findViewById(R.id.password3);
-        EditText p4 = (EditText) findViewById(R.id.password4);
-        EditText p5 = (EditText) findViewById(R.id.password5);
 
-        // Получаем значение из элемента управления
-        p1.setText(generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars));
-        p2.setText(generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars));
-        p3.setText(generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars));
-        p4.setText(generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars));
-        p5.setText(generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars));
+
+
+
+
+
+
+        String pass1 = generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars);
+        String pass2 = generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars);
+        String pass3 = generateRandomString(10, 12, this.useBigLetters, this.useSmallLetters, this.useNumbers, this.useSpecialChars);
+
+        p1.setText(pass1);
+        p2.setText(pass2);
+        p3.setText(pass3);
+
+
+        // Work with mnemonics
+
+        EditText mnemonics1 = (EditText) findViewById(R.id.mnemonics1);
+        EditText mnemonics2 = (EditText) findViewById(R.id.mnemonics2);
+        EditText mnemonics3 = (EditText) findViewById(R.id.mnemonics3);
+
+        String mnemo1 = getMnemonicByPassword(pass1, MainActivity.dict);
+        String mnemo2 = getMnemonicByPassword(pass2, MainActivity.dict);
+        String mnemo3 = getMnemonicByPassword(pass3, MainActivity.dict);
+
+        mnemonics1.setText(mnemo1);
+        mnemonics2.setText(mnemo2);
+        mnemonics3.setText(mnemo3);
+
+
+
 
 
     }
@@ -163,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onChangeNum(CompoundButton b, boolean isChecked){
 
-        CheckBox chk_Num = (CheckBox) findViewById(R.id.chk_use_big_letters);
+        CheckBox chk_Num = (CheckBox) findViewById(R.id.chk_use_numbers);
         this.useNumbers = chk_Num.isChecked();
 
     }
@@ -175,6 +204,100 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+
+    // Вернет случайное слово из словаря
+    public static String getRandomWord(HashMap<Character, List<String>> hash, char ch) {
+        // Получаем список слов на заданную букву
+        List<String> words = hash.get(ch);
+        // если список пуст
+        if (words == null || words.isEmpty()) {
+            // вернуть пустое значение
+            return null;
+        }
+        // генератор случайных чисел
+        Random random = new Random();
+        // Вернуть случайный индекс исходя из размера списка
+        int index = random.nextInt(words.size());
+        // Вернуть слово из списка по заданному индексу
+        return words.get(index);
+
+    }
+
+
+    public static HashMap<Character, List<String>> load_list(){
+
+        HashMap<Character, List<String>> d = new HashMap<>();
+
+        d.put('a',  Arrays.asList("ant", "ask", "ace"));
+        d.put('b',  Arrays.asList("bat", "box", "bag"));
+        d.put('c',  Arrays.asList("cat", "car", "cow"));
+        d.put('d',  Arrays.asList("dog", "day", "dip"));
+        d.put('e',  Arrays.asList("egg", " ear ", "elm"));
+        d.put('f',  Arrays.asList("fan", " fly ", "fox"));
+        d.put('g',  Arrays.asList("gum", " gas ", "gem"));
+        d.put('h',  Arrays.asList("hat", " hot ", "hop"));
+        d.put('i',  Arrays.asList("ice", " ink ", "ivy"));
+        d.put('j',  Arrays.asList("jam", " jet ", "joy"));
+        d.put('k',  Arrays.asList("key", " kid ", "kit"));
+        d.put('l',  Arrays.asList("log", " lap ", "lot"));
+        d.put('m',  Arrays.asList("man", " map ", "mud"));
+        d.put('n',  Arrays.asList("nut", " new ", "nap"));
+        d.put('o',  Arrays.asList("owl", " oak ", "orb"));
+        d.put('p',  Arrays.asList("pen", " pig ", "pan"));
+        d.put('q',  Arrays.asList("quip", " quay ", "quid"));
+        d.put('r',  Arrays.asList("rat", " red ", "rug"));
+        d.put('s',  Arrays.asList("sun", " sea ", "sky"));
+        d.put('t',  Arrays.asList("tea", " toe ", "top"));
+        d.put('u',  Arrays.asList("urn", " use ", "ups"));
+        d.put('v',  Arrays.asList("van", " vet ", "vie"));
+        d.put('w',  Arrays.asList("wig", " win ", "web"));
+        d.put('x',  Arrays.asList("xis", " xiv ", "xii"));
+        d.put('y',  Arrays.asList("yak", " yam ", "yew"));
+        d.put('z',  Arrays.asList("zoo", " zap ", "zip"));
+ 
+
+
+        return d;
+    };
+
+
+
+    public static String getMnemonicByPassword(String password, HashMap<Character, List<String>> dict){
+        String result = "";
+        for (int i = 0; i < password.length(); i++) {
+            char ch = password.charAt(i);
+            if ( (ch >= 'a') && (ch <= 'z') ){
+
+                result = result.concat( getRandomWord(dict, ch) );
+
+            } else if ( (ch >= 'A') && (ch <= 'Z') ) {
+
+                Character ch2 = ch;
+
+                char lower_ch = ch2.toString().toLowerCase().charAt(0);
+
+                String word = getRandomWord(dict, lower_ch);
+
+                if (word != null)
+                        {
+                            result = result.concat( word.toUpperCase() ); }
+                        else
+                        {
+                            result = result.concat("!error!");
+                        };
+                }
+
+
+            else
+            {
+
+                result += ch;
+
+            };
+            if ( (i+1) != password.length() ) result = result.concat(" ");
+        };
+        return result;
+    }
 
 
 }
