@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
                 mnemonics2.setText(e.getStackTrace().toString());
             };
 
-        
+
         if (MainActivity.is_loaded && !remote_dict.isEmpty() && remote_dict.containsKey('a')){
             mnemonics1.setText(getMnemonicByPassword(pass1, remote_dict));
             mnemonics2.setText(getMnemonicByPassword(pass2, remote_dict));
