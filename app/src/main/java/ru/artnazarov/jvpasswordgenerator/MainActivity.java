@@ -31,24 +31,56 @@ import java.io.InputStream;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+/**
+ * Класс активности с двумя макетами основной экран и настройки.
+ * Предназначен для обработки событий, происходящих в элементах управления
+ * Использует асинхронную загрузку с сервера словаря
+ */
 public class MainActivity extends AppCompatActivity {
 
+    /**
+     * Использовать ли заглавные, по умолчанию да
+     */
     protected boolean useBigLetters = true;
+    /**
+     * Использовать ли малые, по умолчанию да
+     */
     protected boolean useSmallLetters = true;
+    /**
+     * Использовать ли числа, по умолчанию да
+     */
     protected boolean useNumbers = true;
+    /**
+     * Использовать ли спец. символы, по умолчанию да
+     */
     protected boolean useSpecialChars = true;
 
-    protected static int voc_count = -1; // число загруженных слов
-    // словарь
+    /**
+     * Счетчик загруженных слов
+     */
+    protected static int voc_count = -1;
+    /**
+     *  Хранит словарь буква -> список слов, начинающихся на заданную
+     */
     public static HashMap<Character, List<String>> remote_dict = null;
-    // загружено?
+
+    /**
+     * Был ли загружен словарь, по умолчанию нет
+     */
     public static boolean is_loaded = false;
-    // сообщение о сетевой ошибке
+    /**
+     *  Сообщение о сетевой ошибке, по умолчанию пустая строка
+     */
     public static String network_error = "";
 
 
-
-
+    /**
+     * Конструктор активности
+     *
+     * @param savedInstanceState If the activity is being re-initialized after
+     *                           previously being shut down then this Bundle contains the data it most
+     *                           recently supplied in {@link #onSaveInstanceState}.  <b><i>Note: Otherwise it is null.</i></b>
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,16 +89,25 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Переключает на макет activity_main
+     */
     public void switchToMain(){
         setContentView(R.layout.activity_main);
         eventHandlersForMain();
     }
 
+    /**
+     * Переключает на макет settings_layout
+     */
     public void switchToSettings(){
         setContentView(R.layout.settings_layout);
         eventHandlersForSettings();
     }
 
+    /**
+     * Назначает обработчики событий для элементов управлени макета activity_main
+     */
     public void eventHandlersForMain(){
         setContentView(R.layout.activity_main);
         // Получаем указатель на кнопку по id
@@ -78,6 +119,9 @@ public class MainActivity extends AppCompatActivity {
         button2.setOnClickListener(this::onClick2);
     }
 
+    /**
+     * Назначает обработчики событий для элементов управления макета settings_layout
+     */
     public  void  eventHandlersForSettings(){
         setContentView(R.layout.settings_layout);
 
@@ -105,7 +149,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    // Определяем функцию для генерации случайной строки
+    /**
+     * Определяем функцию для генерации случайной строки
+     *
+     * @param n Минимальное число символов
+     * @param m Максимальное число символов
+     * @param needBig Допустимы ли заглавные
+     * @param needSmall Допустимы ли малые
+     * @param needNumbers Допустимы ли числа
+     * @param needSpecial Допустими ли спец. знаки
+     * @return Возвращает пароль
+     */
     public static String generateRandomString(int n, int m,
                                               boolean needBig,  boolean needSmall,
                                               boolean needNumbers, boolean needSpecial) {
@@ -136,6 +190,11 @@ public class MainActivity extends AppCompatActivity {
         return sb.toString();
     }
 
+    /**
+     * Обработчик события для щелчка по кнопке Придумать пароль
+     *
+     * @param v
+     */
     public void onClick(View v) {
         // Обработчик события - получатель события по id
         EditText p1 = (EditText) findViewById(R.id.password1);
@@ -201,12 +260,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * @param v Обработчик события для щелчка по кнопке к настройкам
+     */
     public void onClick2(View v) {
 
         switchToSettings();
 
     }
 
+    /**
+     * Обработчик события для щелчка по кнопке на главную
+     *
+     * @param v
+     */
     public void onClick3(View v) {
 
 
@@ -214,12 +281,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Обработчик переключения состояния флажка Использовать заглавные
+     *
+     * @param b
+     * @param isChecked
+     */
     public void onChangeBig(CompoundButton b, boolean isChecked){
         CheckBox chk_Big = (CheckBox) findViewById(R.id.chk_use_big_letters);
         this.useBigLetters = chk_Big.isChecked();
 
     }
 
+    /**
+     * Обработчик нажатия для изменения состояния флажка Использовать малые
+     *
+     * @param b
+     * @param isChecked
+     */
     public void onChangeSma(CompoundButton b, boolean isChecked){
 
         CheckBox chk_Sma = (CheckBox) findViewById(R.id.chk_use_big_letters);
@@ -227,6 +306,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Обработчик смены состояния флажка Использовать числа
+     *
+     * @param b
+     * @param isChecked
+     */
     public void onChangeNum(CompoundButton b, boolean isChecked){
 
         CheckBox chk_Num = (CheckBox) findViewById(R.id.chk_use_numbers);
@@ -234,6 +319,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Обработчик смены состояния для флажка использовать спец. знаки
+     *
+     * @param b
+     * @param isChecked
+     */
     public void onChangeSpe(CompoundButton b, boolean isChecked){
 
             CheckBox chk_Spe = (CheckBox) findViewById(R.id.chk_use_special_chars);
@@ -242,7 +333,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-    // Вернет случайное слово из словаря
+    /**
+     * Вернет случайное слово из словаря
+     *
+     * @param hash Словарь литера -> список слов на данную букву
+     * @param ch Очередной символ
+     * @return Возвращает случайное слово на заданную букву
+     */
     public static String getRandomWord(HashMap<Character, List<String>> hash, char ch) {
         // Получаем список слов на заданную букву
         List<String> words = hash.get(ch);
@@ -261,7 +358,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    // Загрузчик в словарь с сортировкой в списки, слов согласно первой букве
+    /**
+     * Загружает в отдельном потоке с сервера словарь
+     *
+     * @return Возвращает словарь литера -> связный список
+     */
     public static HashMap<Character, List<String>> load_list(){
 
 
@@ -331,7 +432,13 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
-
+    /**
+     * Возвращает случайную мнемоническую фразу для запоминания пароля
+     *
+     * @param password Придуманный пароль
+     * @param dict Словарь
+     * @return Случайная мнемоника
+     */
     public static String getMnemonicByPassword(String password, HashMap<Character, List<String>> dict){
         String result = "";
         for (int i = 0; i < password.length(); i++) {
